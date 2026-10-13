@@ -25,7 +25,10 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       }
       const res = await signIn("credentials", { email, password, redirect: false });
       if (!res || res.error) throw new Error("Wrong email or password");
-      router.replace(mode === "register" ? "/import" : "/map");
+      // Only follow same-site paths, never a full URL from the query string
+      const next = new URLSearchParams(window.location.search).get("callbackUrl");
+      const safeNext = next?.startsWith("/") && !next.startsWith("//") ? next : "/map";
+      router.replace(mode === "register" ? "/import" : safeNext);
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
