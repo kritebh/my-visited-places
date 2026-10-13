@@ -24,8 +24,10 @@ export interface Viewer {
  * Returns null when neither applies.
  */
 export async function resolveViewer(req: Request): Promise<Viewer | null> {
-  await connectDB();
+  // Read the request first: it marks GET handlers as dynamic, so the build
+  // doesn't try to prerender them (and connect to MongoDB) without a request
   const slug = new URL(req.url).searchParams.get("slug");
+  await connectDB();
   if (slug) {
     const user = await User.findOne({ publicSlug: slug, isPublic: true }, { shareReviews: 1, dataVersion: 1 }).lean();
     if (!user) return null;
