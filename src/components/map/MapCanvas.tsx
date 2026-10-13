@@ -36,6 +36,31 @@ const STYLE = {
 const STATE_ZOOM = 3.5;
 const REGION_SOURCES = ["countries", "india", "admin1"];
 
+/**
+ * The OpenFreeMap dark style asks for "circle-11" but its sprite only has
+ * "circle_11". Serve such icons under the hyphenated name, waiting for the
+ * sprite if tiles render before it has loaded.
+ */
+function aliasSpriteImages(map: MaplibreMap) {
+  map.setMissingStyleImageResolver(async (id) => {
+    const alias = id.replaceAll("-", "_");
+    if (alias === id) return;
+    if (!map.hasImage(alias)) {
+      await new Promise<void>((resolve) => {
+        const done = () => {
+          if (!map.hasImage(alias)) return;
+          map.off("data", done);
+          resolve();
+        };
+        map.on("data", done);
+        setTimeout(() => (map.off("data", done), resolve()), 5000);
+      });
+    }
+    const img = map.hasImage(alias) && !map.hasImage(id) ? map.getImage(alias) : undefined;
+    if (img) map.addImage(id, img.data, { pixelRatio: img.pixelRatio, sdf: img.sdf });
+  });
+}
+
 interface Props {
   view: View;
   regions?: RegionsResponse;
@@ -211,7 +236,10 @@ export default function MapCanvas({ view, regions, worldBounds, points, admin1, 
 
   return (
     <Map
-      ref={mapRef}
+      ref={(r) => {
+        mapRef.current = r;
+        if (r) aliasSpriteImages(r.getMap());
+      }}
       mapStyle={STYLE[scheme]}
       initialViewState={{ bounds: INDIA_BOUNDS, fitBoundsOptions: { padding: 24 } }}
       onLoad={(e) => {
