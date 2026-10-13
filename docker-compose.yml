@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  mongo-express:
+    image: mongo-express:1
+    restart: unless-stopped
+    profiles: ["tools"]
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on: [mongo]
+
+  # Production-like container for the app. For development run `npm run dev` on the host.
+  app:
+    build: .
+    profiles: ["app"]
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/myplaces
+      AUTH_TRUST_HOST: "true"
+    depends_on: [mongo]
+
+volumes:
+  mongo-data:
