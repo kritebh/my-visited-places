@@ -1,13 +1,70 @@
+<div align="center">
+
+<img src="src/app/icon.png" width="72" alt="" />
+
 # My Places
 
-A mobile-first PWA that maps where you've been, using your Google Maps data. India is drawn with
-official (Survey of India–aligned) state boundaries, and trips abroad colour in countries and their states or provinces.
-Regions are shaded by how many visits they have.
+**See every state and country you've been to, from your Google Maps history.**
 
-**Stack:** Next.js 16 (App Router), React 19, MongoDB/Mongoose, Auth.js (email + password), MapLibre GL,
-Tailwind v4, Recharts.
+A mobile-first, installable web app. Import your Google Takeout or phone Timeline export and get a map of
+India and the world, shaded by how often you've visited each place, plus yearly stats and a shareable travel card.
 
-## Run locally
+![Next.js 16](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs)
+![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-8-47a248?logo=mongodb&logoColor=white)
+![MapLibre GL](https://img.shields.io/badge/MapLibre_GL-6-396cb2?logo=maplibre&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-installable-5a0fc8?logo=pwa&logoColor=white)
+
+<img src="docs/screenshots/desktop-map-light.webp" alt="India map with states shaded by number of visits" width="100%" />
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/mobile-map.webp" alt="Map on a phone" /></td>
+    <td><img src="docs/screenshots/mobile-timeline.webp" alt="Timeline of visits" /></td>
+    <td><img src="docs/screenshots/mobile-profile.webp" alt="Profile with travel card and sharing" /></td>
+    <td><img src="docs/screenshots/mobile-map-dark.webp" alt="Map in dark mode" /></td>
+  </tr>
+</table>
+
+</div>
+
+## Features
+
+- **India with official boundaries.** States and UTs are drawn from Survey of India–aligned data, so Jammu & Kashmir and Ladakh appear in full.
+- **The whole world too.** Trips abroad colour in countries and their states or provinces.
+- **Shaded by visits.** Each region darkens with how often you've been there, with a count bubble for each area and a running "21 / 36 states" total.
+- **Imports everything Google gives you.** Takeout reviews, Maps photos, labelled places, the phone Timeline export, older Location History and Google Photos locations. You can also add places by hand.
+- **Private by design.** Files are read on your device; only the extracted locations are uploaded, never photos.
+- **No duplicates.** Re-importing the same export adds nothing, overlapping Timeline exports are merged, and visits you delete stay deleted.
+- **Timeline and stats.** Search every visit, filter by year, and see visits per year, top states and where the data came from.
+- **Share your map.** A public link shows only your coloured map and per-region counts. Places, dates and your timeline stay private. Or share a ready-made image card.
+- **Works like an app.** Installable, works offline with your last-seen data, has light and dark themes, and is built for phones first.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/desktop-map-dark.webp" alt="India map in dark mode" /><br /><sub>Dark mode</sub></td>
+    <td width="50%"><img src="docs/screenshots/desktop-world-light.webp" alt="World map" /><br /><sub>World view</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/desktop-stats-light.webp" alt="Stats page" /><br /><sub>Stats, filterable by year</sub></td>
+    <td><img src="docs/screenshots/share-card.webp" alt="Shareable travel card" /><br /><sub>Share card (also the link preview image)</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="25%"><img src="docs/screenshots/mobile-public.webp" alt="Public profile" /><br /><sub>Public link: map and counts only</sub></td>
+    <td width="25%"><img src="docs/screenshots/mobile-stats.webp" alt="Stats on a phone" /><br /><sub>Stats</sub></td>
+    <td width="25%"><img src="docs/screenshots/mobile-import.webp" alt="Import screen" /><br /><sub>Import</sub></td>
+    <td width="25%"><img src="docs/screenshots/mobile-timeline.webp" alt="Timeline on a phone" /><br /><sub>Timeline</sub></td>
+  </tr>
+</table>
+
+## Quick start
+
+You need Node.js 22+ and Docker (for MongoDB).
 
 ```bash
 docker compose up -d mongo        # MongoDB on :27017
@@ -16,12 +73,27 @@ npm install                       # also copies the MapLibre worker into public/
 npm run dev                       # http://localhost:3000
 ```
 
-To open it on your phone, run `npm run dev -- -H 0.0.0.0` and visit `http://<your-LAN-IP>:3000`.
-Installing the PWA and running the service worker need HTTPS (or localhost), so for install testing use a tunnel
+Create an account, open **Import** and drop in your Takeout `.zip` or `Timeline.json`.
+
+**On your phone:** run `npm run dev -- -H 0.0.0.0` and open `http://<your-LAN-IP>:3000`.
+Installing the PWA and the service worker need HTTPS (or localhost), so for install testing use a tunnel
 (e.g. `cloudflared tunnel --url http://localhost:3000`) or `npm run build && npm start` behind HTTPS.
 
-Optional: `docker compose --profile tools up -d` starts mongo-express on :8081, and
-`docker compose --profile app up --build` runs the production container.
+**Switching theme:** the moon/sun button on the Profile page (sidebar on desktop) switches between light and dark. Settings → Appearance also offers "System" to follow the device.
+
+### Configuration
+
+| Variable | Required | Default | What it does |
+| --- | --- | --- | --- |
+| `MONGODB_URI` | yes | `mongodb://localhost:27017/myplaces` | MongoDB connection string |
+| `AUTH_SECRET` | yes | | Signs session cookies. Generate with `openssl rand -base64 32` |
+| `AUTH_TRUST_HOST` | no | `true` in the example | Needed when the app is reached through a LAN IP, tunnel or proxy |
+| `DAY_TIMEZONE` | no | `Asia/Kolkata` | Time zone that decides which calendar day a visit falls on |
+
+### Docker
+
+`docker compose --profile app up --build` runs the production container next to MongoDB on :3000.
+`docker compose --profile tools up -d` adds mongo-express on :8081 for browsing the database.
 
 ## Importing data
 
@@ -36,6 +108,20 @@ Optional: `docker compose --profile tools up -d` starts mongo-express on :8081, 
 Zip files are read in the browser through their central directory, so only the `.json` entries are
 decompressed and only the extracted visits are uploaded. Re-importing the same export is a no-op,
 because every visit has a dedupe key.
+
+### Getting your data
+
+- **Takeout:** go to [takeout.google.com](https://takeout.google.com), click **Deselect all**, tick **Maps** and **Maps (your places)** (and **Google Photos** for photo locations), then download the `.zip`. There's no need to unzip it.
+- **Timeline:** on Android, Settings → Location → Location services → Timeline → **Export Timeline data**. On iOS, Google Maps → profile → Settings → Personal content → **Export Timeline data**.
+
+The Import page walks through both steps.
+
+## Privacy
+
+- Exports are parsed in the browser. Photos and the raw files never leave your device.
+- Passwords are hashed with bcrypt, and sessions are signed JWT cookies.
+- Profiles are private until you create a share link. A shared link shows the coloured map and per-region counts only: no places, dates, timeline or year filter. You can rename or stop the link at any time.
+- Settings → **Delete all visits** removes your data.
 
 ## Duplicates and counting
 
@@ -72,10 +158,24 @@ public/sw.js                  offline shell, cached tiles/boundaries, last-seen 
 
 ## Scripts
 
-- `npm test`: Vitest (parsers + region assignment)
-- `npm run geo`: rebuild boundary GeoJSON (cached downloads in `.geo-cache/`)
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Dev server with Turbopack |
+| `npm run build` / `npm start` | Production build and server |
+| `npm test` | Vitest: parsers, region assignment and dedupe |
+| `npm run lint` | ESLint |
+| `npm run geo` | Rebuild boundary GeoJSON (downloads cached in `.geo-cache/`) |
+
+Parser tests read a real export from `../Takeout` and are skipped when it's missing.
 
 ## Adding Google sign-in later
 
 Add `Google` from `next-auth/providers/google` to `src/auth.ts`, set `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`,
 and in the `signIn` callback link the account to the `User` by email.
+
+## Credits
+
+- Map tiles: [OpenFreeMap](https://openfreemap.org), © [OpenMapTiles](https://openmaptiles.org), data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors
+- Boundaries: [Natural Earth](https://www.naturalearthdata.com) and [india-maps-data](https://github.com/udit-001/india-maps-data)
+- Place search: [Photon](https://photon.komoot.io) by Komoot
+- Not affiliated with Google. "Google Maps" and "Google Photos" are trademarks of Google LLC.

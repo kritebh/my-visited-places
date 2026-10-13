@@ -93,17 +93,23 @@ body {
   border-top-color: var(--line) !important;
 }
 :root[data-theme="dark"] .maplibregl-ctrl-icon,
+:root[data-theme="dark"] .maplibregl-ctrl-attrib-button,
 .dark .maplibregl-ctrl-icon {
   filter: invert(1);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .maplibregl-ctrl-icon {
+  :root:not([data-theme="light"]) .maplibregl-ctrl-icon,
+  :root:not([data-theme="light"]) .maplibregl-ctrl-attrib-button {
     filter: invert(1);
   }
 }
 .maplibregl-ctrl-attrib {
   border-radius: 10px;
   background: color-mix(in srgb, var(--surface) 75%, transparent) !important;
+  color: var(--ink-2) !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: inherit !important;
 }
 .maplibregl-canvas {
   outline: none;
