@@ -101,9 +101,11 @@ function Settings({ initial }: { initial: Profile }) {
         <Button variant="danger" onClick={deleteAll}><Trash2 className="size-4" /> Delete all visits</Button>
       </Card>
 
-      <Button variant="secondary" onClick={() => {
+      <Button variant="secondary" onClick={async () => {
           navigator.serviceWorker?.controller?.postMessage("clear-user-cache");
-          signOut({ callbackUrl: "/" });
+          // Navigate ourselves: the server-built redirect URL can point at the container's 0.0.0.0 address
+          await signOut({ redirect: false });
+          window.location.assign("/");
         }} className="w-full">
         <LogOut className="size-4" /> Log out
       </Button>

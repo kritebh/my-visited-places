@@ -34,7 +34,7 @@ export function useApi<T>(url: string | null) {
       .then((data) => !cancelled && setState({ key, data }))
       .catch((e: Error) => {
         // Session points at an account that no longer exists: sign in again
-        if (e instanceof ApiError && e.status === 401) signOut({ callbackUrl: "/login" });
+        if (e instanceof ApiError && e.status === 401) signOut({ redirect: false }).then(() => window.location.assign("/login"));
         if (!cancelled) setState((s) => ({ key, data: s.data, error: e.message }));
       });
     return () => {
